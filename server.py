@@ -96,71 +96,58 @@ def upload_file():
     </form>
     '''
 
-@app.route('/delete', methods=['GET', 'POST'])
+@app.route('/delete', methods=['DELETE'])
 def delete_file():
-    if request.method == 'POST':
-        values = request.values.to_dict()
-        if 'file_name' in values:
+    if request.method == 'DELETE':
+        # check if the post request has the file part
+        if 'filename' not in request.args:
+            raise InvalidUsage('The filename is not given',
+                                status_code=410)
+
+        filename = request.args.get("filename").replace(" ", "_")
+        print(filename)
+        if filename:
             try:
                 del_file = (app.config['UPLOAD_FOLDER'] \
-                            + "/" + values['file_name'])
+                            + "/" + filename)
                 os.remove(del_file)
             except OSError:
-                raise InvalidUsage('The file is not available', 
+                raise InvalidUsage('Unable to delete the given filename', 
                                     status_code=410)
         else:
             raise InvalidUsage('Please provide a file name', 
                                     status_code=410)
 
         return "File Deleted Successfully!"
-    return '''
-    <!DOCTYPE html>
-    <html>
-    <body>
+    return
 
-    <form method=post enctype=multipart/form-data>
-    File Name: <input type="text" name="file_name" value=""><br>
-    <input type="submit" value="Submit">
-    </form>
 
-    </body>
-    </html>
-    '''
-
-@app.route('/retrieve_file', methods=['GET', 'POST'])
+@app.route('/retrieve_file', methods=['GET'])
 def retrieve_file():
-    if request.method == 'POST':
-        values = request.values.to_dict()
-        if 'file_name' in values:
+    if request.method == 'GET':
+        if 'filename' not in request.args:
+            raise InvalidUsage('The file name is not given',
+                                status_code=410)
+        filename = request.args.get("filename").replace(" ", "_")
+        if filename:
             try:
                 file_full_path = (app.config['UPLOAD_FOLDER'] \
-                            + "/" + values['file_name'])
+                            + "/" + filename)
                 if os.path.exists(file_full_path):
                     return send_file(file_full_path)
                 else:
                     raise InvalidUsage('The file is not available', 
                                     status_code=410)
             except OSError:
-                raise InvalidUsage('The file deleted unsucessfully', 
+                raise InvalidUsage('Unable to retrive the file', 
                                     status_code=410)
         else:
             raise InvalidUsage('Please provide a file name', 
                                     status_code=410)
 
         return "File Deleted Successfully!"
-    return '''
-    <!DOCTYPE html>
-    <html>
-    <body>
+    return
 
-    <form method=post enctype=multipart/form-data>
-    File Name: <input type="text" name="file_name" value=""><br>
-    <input type="submit" value="Submit">
-    </form>
-
-    </body>
-    </html>
-    '''
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True, port=5000)
